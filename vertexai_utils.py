@@ -8,7 +8,7 @@ import vertexai.preview.generative_models as generative_models
 from dotenv import load_dotenv
 from vertexai.generative_models import FinishReason, GenerativeModel, Part
 
-from prompts import few_shot_prompt, zero_shot_prompt
+from prompts import zero_shot_prompt
 
 # Define variables
 load_dotenv()
@@ -17,7 +17,7 @@ PROJECT = os.getenv("PROJECT")
 MODEL = "gemini-1.5-pro-001"
 generation_config = {
     "max_output_tokens": 8192,
-    "temperature": 0.5,
+    "temperature": 0.0, # Make results reproducible
     "top_p": 0.95,
 }
 safety_settings = {
