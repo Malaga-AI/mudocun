@@ -1,6 +1,8 @@
 import os
+from time import time
 from urllib.parse import urlparse
 
+import requests
 import vertexai
 import vertexai.preview.generative_models as generative_models
 from dotenv import load_dotenv
@@ -34,21 +36,34 @@ model = GenerativeModel(MODEL)
 def is_local(uri):
     return urlparse(uri).scheme in ["file", ""]
 
-def get_pdf_data(pdf_document_uri):
-    if is_local(pdf_document_uri):
-        with open(pdf_document_uri, "rb") as pdf_file:
-            pdf_bytes = pdf_file.read()
-            return Part.from_data(mime_type="application/pdf", data=pdf_bytes)
-    return Part.from_uri(pdf_document_uri, mime_type="application/pdf")
+
+def read_document_file(pdf_document_path):
+    with open(pdf_document_path, "rb") as pdf_file:
+        pdf_bytes = pdf_file.read()
+        return Part.from_data(mime_type="application/pdf", data=pdf_bytes)
+
+
+def fetch_document(pdf_document_url):
+    response = requests.get(pdf_document_url)
+    response.raise_for_status()
+    return Part.from_data(mime_type="application/pdf", data=response.content)
 
 
 # Utility functions
 def generate_quiz(document, reference_document=None):
     print(f"Generating quiz for document \"{document["title"]}\"...")
-    pdf_document = get_pdf_data(document["uri"])
+    uri = document["uri"]
+    pdf_document = fetch_document(uri) if not is_local(uri) else read_document_file(uri)
+    start = time()
     response = model.generate_content(
         [zero_shot_prompt, pdf_document],
         generation_config=generation_config,
         safety_settings=safety_settings,
     )
-    return response.text
+    request_time = time() - start
+    return (
+        response.text,
+        response.usage_metadata.prompt_token_count,     # input tokens
+        response.usage_metadata.candidates_token_count, # output tokens
+        request_time
+    )
