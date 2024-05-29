@@ -1,4 +1,5 @@
 import os
+from datetime import UTC, datetime
 from time import time
 from urllib.parse import urlparse
 
@@ -15,7 +16,6 @@ from models import (Article, MultipleChoiceQuestion, Quiz, QuizMetadata,
                     QuizQuestion)
 from prompts import create_quiz_prompt
 
-# Define variables
 load_dotenv()
 REGION = os.getenv("REGION")
 PROJECT = os.getenv("PROJECT")
@@ -31,9 +31,10 @@ safety_settings = {
     HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
     HarmCategory.HARM_CATEGORY_HARASSMENT: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
 }
+vertexai.init(project=PROJECT, location=REGION)
+model = GenerativeModel(MODEL)
 
 
-# Helper functions
 def is_local(uri: str) -> bool:
     return urlparse(uri).scheme in ["file", ""]
 
@@ -50,21 +51,6 @@ def fetch_document(pdf_document_url) -> Part:
     return Part.from_data(mime_type="application/pdf", data=response.content)
 
 
-# Function calling
-def create_quiz(questions: list[MultipleChoiceQuestion]):
-    """"Create a quiz from the given multiple choice questions.
-
-    Args:
-        questions: list of multiple choice questions for the quiz.
-    """
-    return questions
-
-# Model startup
-vertexai.init(project=PROJECT, location=REGION)
-model = GenerativeModel(MODEL)
-#model_with_tools = GenerativeModel(MODEL, tools=[create_quiz])
-
-# Utility functions
 def generate_quiz(document: Article):
     print(f"Generating quiz for document \"{document["title"]}\"...")
     uri = document["uri"]
@@ -83,12 +69,19 @@ def generate_quiz(document: Article):
         request_time
     )
 
+def create_quiz(questions: list[MultipleChoiceQuestion]):
+    """"Create a quiz from the given multiple choice questions.
+
+    Args:
+        questions: list of multiple choice questions for the quiz.
+    """
+    return questions
+
 create_quiz_func = FunctionDeclaration(
     name=create_quiz.__name__,
     description=create_quiz.__doc__,
-    #parameters=MultipleChoiceQuestion.model_json_schema()  # Does not pick as a list
     parameters = {
-        "type": "array",
+        "type": "object",
         "properties": {
             "questions": {
                 "type": "array",
@@ -101,13 +94,11 @@ create_quiz_func = FunctionDeclaration(
         ]
     }
 )
-
-
 tools = [
     Tool(function_declarations=[create_quiz_func])
 ]
 
-# Doesn't work with the following error, despite using a Gemini 1.5 pro model:
+# Using ToolConfig doesn't work with the following error, despite using a Gemini 1.5 pro model:
 # 400 Unable to submit request because the forced function calling (mode = ANY) is only supported for Gemini 1.5 Pro models.
 # Learn more: https://cloud.google.com/vertex-ai/generative-ai/docs/multimodal/function-calling
 
@@ -118,7 +109,7 @@ tools = [
 #     )
 # )
 
-# Can't generate structured output directly due to error:
+# We can't generate structured output directly due to error:
 # InvalidArgument: 400 Unable to submit request because Function Calling is not supported with non-text input.
 # Remove the function declarations or remove inline_data/file_data from contents.
 # Learn more: https://cloud.google.com/vertex-ai/generative-ai/docs/multimodal/function-calling
@@ -133,5 +124,22 @@ def generate_structured_quiz(questions: str):
         tools=tools,
         #tool_config=tool_config # Doesn't work
     )
-    request_time = time() - start
-    return response
+    generation_time = time() - start
+
+    func = response.candidates[0].content.parts[0].function_call
+    func_dict = type(func).to_dict(func)    # Convert from Google Protocol Buffer to dict
+
+    print(f"func_dict={func_dict}")
+
+    questions = create_quiz(**func_dict["args"])
+
+    metadata = QuizMetadata(
+        model=model._model_name,
+        region=REGION,
+        num_input_tokens=response.usage_metadata.prompt_token_count,
+        num_output_tokens=response.usage_metadata.candidates_token_count,
+        generation_time=generation_time,
+        timestamp=str(datetime.now(UTC))
+    )
+
+    return questions, metadata
