@@ -195,7 +195,7 @@ def generate_structured_questions(
             message=e,
             stage=GenerationStage.PARSING,
             metadata=metadata,
-            response=response,
+            response=str(response),
         )
 
     return structured_questions, metadata
