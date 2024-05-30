@@ -1,10 +1,16 @@
+import re
+from enum import Enum, auto
+from typing import Any
+
 from pydantic import BaseModel, Field
-from typing_extensions import TypedDict
 
 
-class Article(TypedDict):
+class Article(BaseModel):
     title: str
     uri: str
+
+    def filename(self, index: int) -> str:
+        return f"{str(index).zfill(4)}-{re.sub(r'\s+', '_', self.title)}"
 
 
 class MultipleChoiceQuestion(BaseModel):
@@ -20,41 +26,64 @@ class MultipleChoiceQuestion(BaseModel):
     )
 
 
-class QuestionMetadata(TypedDict):
+class QuestionMetadata(BaseModel):
     is_validated: bool
     validator: str | None = None
     explanation: str | None = None
 
 
-class QuizQuestion(TypedDict):
+class QuizQuestion(BaseModel):
     multiple_choice_question: MultipleChoiceQuestion
     metadata: QuestionMetadata
 
-    def __init__(self, multiple_choice_question: MultipleChoiceQuestion):
-        self.multiple_choice_question = multiple_choice_question
-        self.metadata = QuestionMetadata(is_validated=False)
 
-
-class QuizMetadata(TypedDict):
+class GenerationMetadata(BaseModel):
     model: str
-    region: str | None
-    num_input_tokens: int
-    num_output_tokens: int
+    region: str | None = None
+    num_input_tokens: int | None = None
+    num_output_tokens: int | None = None
     generation_time: float
     timestamp: str
 
 
-class Quiz(TypedDict):
-    article: Article
-    questions: list[QuizQuestion]
-    metadata: QuizMetadata
+class GenerationStage(Enum):
+    CREATION = auto()
+    STRUCTURING = auto()
+    PARSING = auto()
+
+
+class FailedGeneration(Exception):
+    stage: GenerationStage
+    metadata: GenerationMetadata
+    model_response: str | None
 
     def __init__(
         self,
-        article: Article,
-        multiple_choice_questions: list[MultipleChoiceQuestion],
-        quiz_metadata: QuizMetadata,
+        message: Any,
+        stage: GenerationStage,
+        metadata: GenerationMetadata,
+        model_response: str | None = None,
     ):
-        self.article = article
-        self.questions = [QuizQuestion(q) for q in multiple_choice_questions]
-        self.metadata = quiz_metadata
+        super().__init__(message)
+        self.stage = stage
+        self.metadata = metadata
+        self.model_response = model_response
+
+
+class FailedQuiz(BaseModel):
+    article: Article
+    reason: str
+    metadata: GenerationMetadata
+    model_response: str | None
+    timestamp: str
+
+
+class QuizMetadata(BaseModel):
+    creation_metadata: GenerationMetadata | None
+    structuring_metadata: GenerationMetadata | None
+
+
+class Quiz(BaseModel):
+    article: Article
+    questions: list[QuizQuestion]
+    metadata: QuizMetadata

@@ -1,0 +1,1 @@
+This is where failed quiz generations are stored.
