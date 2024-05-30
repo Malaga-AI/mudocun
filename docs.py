@@ -154,6 +154,34 @@ online_documents =
     {
         "title": "Colon cancer treatment: a review of preclinical and clinical studies on the use of natural products",
         "uri": "https://www.mdpi.com/1420-3049/25/20/4732/pdf"
+    },
+    {
+        "title": "A2M-LEUK: attention-augmented algorithm for blood cancer detection in children",
+        "uri": "https://link.springer.com/content/pdf/10.1007/s00521-023-08678-8.pdf"
+    },
+    {
+        "title": "Clonal hematopoiesis and blood-cancer risk inferred from blood DNA sequence.",
+        "uri": "https://www.nejm.org/doi/pdf/10.1056/NEJMoa1409405?articleTools=true"
+    },
+    {
+        "title": "Recognition of Blood Cancer Using Different Classification Techniques",
+        "uri": "https://iteecs.com/index.php/iteecs/article/download/4/72"
+    },
+    {
+        "title": "Automatic Detection of White Blood Cancer From Bone Marrow Microscopic Images Using Convolutional Neural Networks",
+        "uri": "https://ieeexplore.ieee.org/ielx7/6287639/8948470/09149873.pdf"
+    },
+    {
+        "title": "Targeting Protein Kinases in Blood Cancer: Focusing on CK1α and CK2",
+        "uri": "https://www.mdpi.com/1422-0067/22/7/3716/pdf?version=1617939782"
+    },
+    {
+        "title": "Ethnic and border differences on blood cancer presentation and outcomes: A Texas population-based study",
+        "uri": "https://onlinelibrary.wiley.com/doi/pdfdirect/10.1002/cncr.33347"
+    },
+    {
+        "title": "Detection and manipulation of methylation in blood cancer DNA using terahertz radiation",
+        "uri": "https://www.nature.com/articles/s41598-019-42855-x.pdf"
     }
 ]
 
