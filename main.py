@@ -59,7 +59,9 @@ def generate_quiz(article: Article) -> Quiz:
         structuring_metadata=structuring_metadata,
     )
     quiz_questions = [
-        QuizQuestion(q, metadata=QuestionMetadata(is_validated=False))
+        QuizQuestion(
+            multiple_choice_question=q, metadata=QuestionMetadata(is_validated=False)
+        )
         for q in structured_questions
     ]
     return Quiz(
