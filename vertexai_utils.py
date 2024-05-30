@@ -68,13 +68,18 @@ def generate_questions(article: Article) -> tuple[str, GenerationMetadata]:
             fetch_document(uri) if not is_local(uri) else read_document_file(uri)
         )
         start = time()
-        response = model.generate_content(
+        model_response = model.generate_content(
             [create_quiz_prompt, pdf_document],
             generation_config=generation_config,
             safety_settings=safety_settings,
         )
+        questions = model_response.text
         generation_time = time() - start
     except Exception as e:
+        try:
+            response = str(model_response)
+        except NameError:
+            response = None
         raise FailedGeneration(
             message=e,
             stage=GenerationStage.CREATION,
@@ -84,6 +89,7 @@ def generate_questions(article: Article) -> tuple[str, GenerationMetadata]:
                 generation_time=0.0,
                 timestamp=str(datetime.now(UTC)),
             ),
+            response=response,
         )
 
     metadata = GenerationMetadata(
@@ -94,7 +100,7 @@ def generate_questions(article: Article) -> tuple[str, GenerationMetadata]:
         generation_time=generation_time,
         timestamp=str(datetime.now(UTC)),
     )
-    return (response.text, metadata)
+    return (questions, metadata)
 
 
 def create_quiz(questions: list[MultipleChoiceQuestion]):
