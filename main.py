@@ -35,7 +35,7 @@ def get_pending_articles(
     pending_articles = []
     if refresh:
         for idx, document in enumerate(documents):
-            pending_articles.append((idx, Article(**document)))
+            pending_articles.append((idx, document))
     else:
         filenames = [
             f.split(".")[0]
@@ -43,14 +43,13 @@ def get_pending_articles(
             if os.path.isfile(os.path.join(output_dir, f))
         ]
         for idx, document in enumerate(documents):
-            article = Article(**document)
-            if article.filename(idx) not in filenames:
-                pending_articles.append((idx, article))
+            if document.filename(idx) not in filenames:
+                pending_articles.append((idx, document))
 
     return pending_articles
 
 
-def get_arxiv_docs():
+def get_arxiv_docs() -> list[Article]:
     response = requests.get(
         "https://raw.githubusercontent.com/paperscape/paperscape-data/master/pscp-2017.csv"
     )
@@ -96,7 +95,9 @@ def generate_quiz(article: Article) -> Quiz:
 
 
 def main(refresh: bool, arxiv_docs: bool, output_dir: str, failed_dir: str):
-    documents = get_arxiv_docs() if arxiv_docs else online_documents
+    documents = (
+        get_arxiv_docs() if arxiv_docs else [Article(**d) for d in online_documents]
+    )
     pending_articles = get_pending_articles(documents, refresh, output_dir)
     start_time = time.time()
     num_failed_articles = 0
