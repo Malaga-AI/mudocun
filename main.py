@@ -4,7 +4,9 @@ import os
 import sys
 import time
 from datetime import timedelta
-from decimal import Decimal
+
+import pandas as pd
+import requests
 
 from docs import online_documents
 from models import (
@@ -25,10 +27,14 @@ logging.basicConfig(
 )
 
 
-def get_pending_articles(refresh: bool, output_dir: str) -> list[tuple[int, Article]]:
+def get_pending_articles(
+    documents: list[Article],
+    output_dir: str,
+    refresh: bool,
+) -> list[tuple[int, Article]]:
     pending_articles = []
     if refresh:
-        for idx, document in enumerate(online_documents):
+        for idx, document in enumerate(documents):
             pending_articles.append((idx, Article(**document)))
     else:
         filenames = [
@@ -36,12 +42,30 @@ def get_pending_articles(refresh: bool, output_dir: str) -> list[tuple[int, Arti
             for f in os.listdir(output_dir)
             if os.path.isfile(os.path.join(output_dir, f))
         ]
-        for idx, document in enumerate(online_documents):
+        for idx, document in enumerate(documents):
             article = Article(**document)
             if article.filename(idx) not in filenames:
                 pending_articles.append((idx, article))
 
     return pending_articles
+
+
+def get_arxiv_docs():
+    response = requests.get(
+        "https://raw.githubusercontent.com/paperscape/paperscape-data/master/pscp-2017.csv"
+    )
+    response.raise_for_status()
+    csv = response.text.split("\n")
+
+    entries = [line.split(";", 7) for line in csv if not line.startswith("#")]
+    df = pd.DataFrame(entries)
+    df_slice = df.sort_values(by=3, ascending=False)[:100][[0, 6]]
+
+    selected_articles = df_slice.apply(
+        lambda row: Article(title=row[6], uri=f"https://arxiv.org/pdf/{row[0]}"), axis=1
+    )
+
+    return selected_articles.tolist()
 
 
 def generate_quiz(article: Article) -> Quiz:
@@ -71,8 +95,9 @@ def generate_quiz(article: Article) -> Quiz:
     )
 
 
-def main(refresh: bool, output_dir: str, failed_dir: str):
-    pending_articles = get_pending_articles(refresh, output_dir)
+def main(refresh: bool, arxiv_docs: bool, output_dir: str, failed_dir: str):
+    documents = get_arxiv_docs() if arxiv_docs else online_documents
+    pending_articles = get_pending_articles(documents, refresh, output_dir)
     start_time = time.time()
     num_failed_articles = 0
 
@@ -84,8 +109,8 @@ def main(refresh: bool, output_dir: str, failed_dir: str):
             file_path = os.path.join(output_dir, filename + ".json")
             with open(file_path, "w") as output_file:
                 output_file.write(quiz.model_dump_json())
-            logging.debug(
-                f"Quiz for article {idx}: {article.title} stored at {file_path}"
+            logging.info(
+                f"SUCCESS: Quiz for article {idx}: {article.title} stored at {file_path}"
             )
         except FailedGeneration as e:
             num_failed_articles += 1
@@ -95,8 +120,8 @@ def main(refresh: bool, output_dir: str, failed_dir: str):
             file_path = os.path.join(
                 failed_dir, filename + "_" + e.metadata.timestamp + ".json"
             )
-            logging.debug(
-                f"Quiz for article {idx}: {article.title} failed. Storing info at {file_path}"
+            logging.warning(
+                f"FAILED: Quiz for article {idx}: {article.title} failed. Storing info at {file_path}"
             )
             with open(file_path, "w") as output_file:
                 output_file.write(failed_quiz.model_dump_json())
@@ -105,7 +130,7 @@ def main(refresh: bool, output_dir: str, failed_dir: str):
 
     stop_time = time.time()
     total_time = timedelta(seconds=stop_time - start_time)
-    logging.debug(
+    logging.info(
         f"Processed {len(pending_articles)} articles in {str(total_time).split('.')[0]} ({num_failed_articles} failed)"
     )
 
@@ -113,8 +138,9 @@ def main(refresh: bool, output_dir: str, failed_dir: str):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--refresh", action="store_true")
+    parser.add_argument("--arxiv-docs", action="store_true")
     parser.add_argument("--output-dir", type=str, default="./outputs")
     parser.add_argument("--failed-dir", type=str, default="./outputs/failed")
     args = parser.parse_args()
 
-    main(args.refresh, args.output_dir, args.failed_dir)
+    main(args.refresh, args.arxiv_docs, args.output_dir, args.failed_dir)

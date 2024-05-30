@@ -2,3 +2,4 @@ google-cloud-aiplatform
 python-dotenv
 requests
 argparse
+pandas
