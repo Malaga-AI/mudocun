@@ -22,9 +22,7 @@ logging.basicConfig(
 )
 
 
-def get_pending_articles(
-    self, refresh: bool, output_dir: str
-) -> list[tuple[int, Article]]:
+def get_pending_articles(refresh: bool, output_dir: str) -> list[tuple[int, Article]]:
     pending_articles = []
     if refresh:
         for idx, document in enumerate(online_documents):
