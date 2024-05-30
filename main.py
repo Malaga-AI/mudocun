@@ -95,7 +95,7 @@ def main(refresh: bool, output_dir: str, failed_dir: str):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--refresh", type=bool, default=False)
+    parser.add_argument("--refresh", action="store_true")
     parser.add_argument("--output-dir", type=str, default="./outputs")
     parser.add_argument("--failed-dir", type=str, default="./outputs/failed")
     args = parser.parse_args()
