@@ -1,3 +1,4 @@
+import logging
 import os
 from datetime import UTC, datetime
 from time import time
@@ -7,13 +8,20 @@ import requests
 import vertexai
 import vertexai.generative_models
 from dotenv import load_dotenv
-from vertexai.generative_models import (FunctionDeclaration, GenerativeModel,
-                                        Part, Tool)
-from vertexai.preview.generative_models import (HarmBlockThreshold,
-                                                HarmCategory, ToolConfig)
+from vertexai.generative_models import FunctionDeclaration, GenerativeModel, Part, Tool
+from vertexai.preview.generative_models import (
+    HarmBlockThreshold,
+    HarmCategory,
+    ToolConfig,
+)
 
-from models import (Article, MultipleChoiceQuestion, Quiz, QuizMetadata,
-                    QuizQuestion)
+from models import (
+    Article,
+    FailedGeneration,
+    GenerationMetadata,
+    GenerationStage,
+    MultipleChoiceQuestion,
+)
 from prompts import create_quiz_prompt
 
 load_dotenv()
@@ -51,52 +59,75 @@ def fetch_document(pdf_document_url) -> Part:
     return Part.from_data(mime_type="application/pdf", data=response.content)
 
 
-def generate_quiz(document: Article):
-    print(f"Generating quiz for document \"{document["title"]}\"...")
-    uri = document["uri"]
-    pdf_document = fetch_document(uri) if not is_local(uri) else read_document_file(uri)
-    start = time()
-    response = model.generate_content(
-        [create_quiz_prompt, pdf_document],
-        generation_config=generation_config,
-        safety_settings=safety_settings,
+def generate_questions(article: Article) -> tuple[str, GenerationMetadata]:
+    logging.debug(f'Generating quiz for document "{article.title}"...')
+    uri = article.uri
+
+    try:
+        pdf_document = (
+            fetch_document(uri) if not is_local(uri) else read_document_file(uri)
+        )
+        start = time()
+        model_response = model.generate_content(
+            [create_quiz_prompt, pdf_document],
+            generation_config=generation_config,
+            safety_settings=safety_settings,
+        )
+        questions = model_response.text
+        generation_time = time() - start
+    except Exception as e:
+        try:
+            response = str(model_response)
+        except NameError:
+            response = None
+        raise FailedGeneration(
+            message=e,
+            stage=GenerationStage.CREATION,
+            metadata=GenerationMetadata(
+                model=model._model_name,
+                region=REGION,
+                generation_time=0.0,
+                timestamp=str(datetime.now(UTC)),
+            ),
+            response=response,
+        )
+
+    metadata = GenerationMetadata(
+        model=model._model_name,
+        region=REGION,
+        num_input_tokens=response.usage_metadata.prompt_token_count,
+        num_output_tokens=response.usage_metadata.candidates_token_count,
+        generation_time=generation_time,
+        timestamp=str(datetime.now(UTC)),
     )
-    request_time = time() - start
-    return (
-        response.text,
-        response.usage_metadata.prompt_token_count,     # input tokens
-        response.usage_metadata.candidates_token_count, # output tokens
-        request_time
-    )
+    return (questions, metadata)
+
 
 def create_quiz(questions: list[MultipleChoiceQuestion]):
-    """"Create a quiz from the given multiple choice questions.
+    """ "Create a quiz from the given multiple choice questions.
 
     Args:
         questions: list of multiple choice questions for the quiz.
     """
     return questions
 
+
 create_quiz_func = FunctionDeclaration(
     name=create_quiz.__name__,
     description=create_quiz.__doc__,
-    parameters = {
+    parameters={
         "type": "object",
         "properties": {
             "questions": {
                 "type": "array",
                 "description": "list of multiple choice questions for the quiz",
-                "items": MultipleChoiceQuestion.model_json_schema()
+                "items": MultipleChoiceQuestion.model_json_schema(),
             },
         },
-        "required": [
-            "questions"
-        ]
-    }
+        "required": ["questions"],
+    },
 )
-tools = [
-    Tool(function_declarations=[create_quiz_func])
-]
+tools = [Tool(function_declarations=[create_quiz_func])]
 
 # Using ToolConfig doesn't work with the following error, despite using a Gemini 1.5 pro model:
 # 400 Unable to submit request because the forced function calling (mode = ANY) is only supported for Gemini 1.5 Pro models.
@@ -114,32 +145,57 @@ tools = [
 # Remove the function declarations or remove inline_data/file_data from contents.
 # Learn more: https://cloud.google.com/vertex-ai/generative-ai/docs/multimodal/function-calling
 
-def generate_structured_quiz(questions: str):
-    print(f"Generating structured quiz...")
+
+def generate_structured_questions(
+    structured_questions: str,
+) -> tuple[list[MultipleChoiceQuestion], GenerationMetadata]:
+    logging.debug(f"Generating structured quiz...")
     start = time()
-    response = model.generate_content(
-        questions.format(questions=questions),
-        generation_config=generation_config,
-        safety_settings=safety_settings,
-        tools=tools,
-        #tool_config=tool_config # Doesn't work
-    )
+
+    try:
+        response = model.generate_content(
+            structured_questions.format(questions=structured_questions),
+            generation_config=generation_config,
+            safety_settings=safety_settings,
+            tools=tools,
+            # tool_config=tool_config # Doesn't work
+        )
+    except Exception as e:
+        raise FailedGeneration(
+            message=e,
+            stage=GenerationStage.STRUCTURING,
+            metadata=GenerationMetadata(
+                model=model._model_name,
+                region=REGION,
+                generation_time=time() - start,
+                timestamp=str(datetime.now(UTC)),
+            ),
+            response=structured_questions,
+        )
+
     generation_time = time() - start
 
-    func = response.candidates[0].content.parts[0].function_call
-    func_dict = type(func).to_dict(func)    # Convert from Google Protocol Buffer to dict
-
-    print(f"func_dict={func_dict}")
-
-    questions = create_quiz(**func_dict["args"])
-
-    metadata = QuizMetadata(
+    metadata = GenerationMetadata(
         model=model._model_name,
         region=REGION,
         num_input_tokens=response.usage_metadata.prompt_token_count,
         num_output_tokens=response.usage_metadata.candidates_token_count,
         generation_time=generation_time,
-        timestamp=str(datetime.now(UTC))
+        timestamp=str(datetime.now(UTC)),
     )
 
-    return questions, metadata
+    try:
+        func = response.candidates[0].content.parts[0].function_call
+        func_dict = type(func).to_dict(
+            func
+        )  # Convert from Google Protocol Buffer to dict
+        structured_questions = create_quiz(**func_dict["args"])
+    except Exception as e:
+        raise FailedGeneration(
+            message=e,
+            stage=GenerationStage.PARSING,
+            metadata=metadata,
+            response=response,
+        )
+
+    return structured_questions, metadata
