@@ -1,5 +1,6 @@
 import logging
 import os
+import random
 from datetime import UTC, datetime
 from time import time
 from urllib.parse import urlparse
@@ -53,8 +54,16 @@ def read_document_file(pdf_document_path: str) -> Part:
         return Part.from_data(mime_type="application/pdf", data=pdf_bytes)
 
 
+user_agents = [
+    "Mozilla/5.0 (Windows NT 10.0; rv:91.0) Gecko/20100101 Firefox/91.0",
+    "Mozilla/5.0 (Windows NT 10.0; rv:78.0) Gecko/20100101 Firefox/78.0",
+    "Mozilla/5.0 (X11; Linux x86_64; rv:95.0) Gecko/20100101 Firefox/95.0",
+]
+
+
 def fetch_document(pdf_document_url) -> Part:
-    response = requests.get(pdf_document_url)
+    headers = {"User-Agent": random.choice(user_agents)}
+    response = requests.get(pdf_document_url, headers=headers)
     response.raise_for_status()
     return Part.from_data(mime_type="application/pdf", data=response.content)
 
