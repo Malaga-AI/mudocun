@@ -95,8 +95,8 @@ def generate_questions(article: Article) -> tuple[str, GenerationMetadata]:
     metadata = GenerationMetadata(
         model=model._model_name,
         region=REGION,
-        num_input_tokens=response.usage_metadata.prompt_token_count,
-        num_output_tokens=response.usage_metadata.candidates_token_count,
+        num_input_tokens=model_response.usage_metadata.prompt_token_count,
+        num_output_tokens=model_response.usage_metadata.candidates_token_count,
         generation_time=generation_time,
         timestamp=str(datetime.now(UTC)),
     )
