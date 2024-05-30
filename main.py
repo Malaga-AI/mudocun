@@ -101,6 +101,8 @@ def main(refresh: bool, output_dir: str, failed_dir: str):
             with open(file_path, "w") as output_file:
                 output_file.write(failed_quiz.model_dump_json())
 
+        time.sleep(0.5)  # Quick and dirty way to prevent rate-limiting
+
     stop_time = time.time()
     total_time = timedelta(seconds=stop_time - start_time)
     logging.debug(
