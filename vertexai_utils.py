@@ -18,12 +18,9 @@ from vertexai.preview.generative_models import (
 from models import (
     Article,
     FailedGeneration,
-    FailedQuiz,
     GenerationMetadata,
     GenerationStage,
     MultipleChoiceQuestion,
-    Quiz,
-    QuizMetadata,
 )
 from prompts import create_quiz_prompt
 
