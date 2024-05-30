@@ -75,7 +75,6 @@ class FailedQuiz(BaseModel):
     reason: str
     metadata: GenerationMetadata
     response: str | None
-    timestamp: str
 
 
 class QuizMetadata(BaseModel):
