@@ -55,26 +55,26 @@ class GenerationStage(Enum):
 class FailedGeneration(Exception):
     stage: GenerationStage
     metadata: GenerationMetadata
-    model_response: str | None
+    response: str | None
 
     def __init__(
         self,
         message: Any,
         stage: GenerationStage,
         metadata: GenerationMetadata,
-        model_response: str | None = None,
+        response: str | None = None,
     ):
         super().__init__(message)
         self.stage = stage
         self.metadata = metadata
-        self.model_response = model_response
+        self.response = response
 
 
 class FailedQuiz(BaseModel):
     article: Article
     reason: str
     metadata: GenerationMetadata
-    model_response: str | None
+    response: str | None
     timestamp: str
 
 

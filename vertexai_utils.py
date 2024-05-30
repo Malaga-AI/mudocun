@@ -167,7 +167,7 @@ def generate_structured_questions(
                 generation_time=time() - start,
                 timestamp=str(datetime.now(UTC)),
             ),
-            model_response=structured_questions,
+            response=structured_questions,
         )
 
     generation_time = time() - start
@@ -192,7 +192,7 @@ def generate_structured_questions(
             message=e,
             stage=GenerationStage.PARSING,
             metadata=metadata,
-            model_response=response,
+            response=response,
         )
 
     return structured_questions, metadata

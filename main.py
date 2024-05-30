@@ -86,7 +86,7 @@ def main(refresh: bool, output_dir: str, failed_dir: str):
                 article=article,
                 reason=str(e),
                 metadata=e.metadata,
-                model_response=e.model_response,
+                response=e.response,
             )
             file_path = os.path.join(
                 failed_dir, filename + "_" + e.metadata.timestamp + ".json"
