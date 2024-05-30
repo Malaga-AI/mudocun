@@ -81,10 +81,7 @@ def main(refresh: bool, output_dir: str, failed_dir: str):
             )
         except FailedGeneration as e:
             failed_quiz = FailedQuiz(
-                article=article,
-                reason=str(e),
-                metadata=e.metadata,
-                response=e.response,
+                article=article, reason=str(e), metadata=e.metadata, response=e.response
             )
             file_path = os.path.join(
                 failed_dir, filename + "_" + e.metadata.timestamp + ".json"
