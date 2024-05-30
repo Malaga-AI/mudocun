@@ -44,7 +44,7 @@ def get_pending_articles(refresh: bool, output_dir: str) -> list[tuple[int, Arti
     return pending_articles
 
 
-def generate_quiz(article: Article, output_dir: str, failed_dir: str) -> Quiz:
+def generate_quiz(article: Article) -> Quiz:
     # 1. Generate questions
     questions, creation_metadata = generate_questions(article)
 
