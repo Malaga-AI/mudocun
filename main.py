@@ -2,6 +2,9 @@ import argparse
 import logging
 import os
 import sys
+import time
+from datetime import timedelta
+from decimal import Decimal
 
 from docs import online_documents
 from models import (
@@ -68,6 +71,9 @@ def generate_quiz(article: Article, output_dir: str, failed_dir: str) -> Quiz:
 
 def main(refresh: bool, output_dir: str, failed_dir: str):
     pending_articles = get_pending_articles(refresh, output_dir)
+    start_time = time.time()
+    num_failed_articles = 0
+
     for idx, article in pending_articles:
         logging.debug(f"Processing article {idx}: {article.title}")
         filename = article.filename(idx)
@@ -80,6 +86,7 @@ def main(refresh: bool, output_dir: str, failed_dir: str):
                 f"Quiz for article {idx}: {article.title} stored at {file_path}"
             )
         except FailedGeneration as e:
+            num_failed_articles += 1
             failed_quiz = FailedQuiz(
                 article=article, reason=str(e), metadata=e.metadata, response=e.response
             )
@@ -91,6 +98,12 @@ def main(refresh: bool, output_dir: str, failed_dir: str):
             )
             with open(file_path, "w") as output_file:
                 output_file.write(failed_quiz.model_dump_json())
+
+    stop_time = time.time()
+    total_time = timedelta(seconds=stop_time - start_time)
+    logging.debug(
+        f"Processed {len(pending_articles)} articles in {str(total_time).split('.')[0]} ({num_failed_articles} failed)"
+    )
 
 
 if __name__ == "__main__":
