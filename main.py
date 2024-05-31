@@ -49,7 +49,7 @@ def get_pending_articles(
     return pending_articles
 
 
-def get_arxiv_docs() -> list[Article]:
+def get_arxiv_docs(max_num_articles: int | None = None) -> list[Article]:
     response = requests.get(
         "https://raw.githubusercontent.com/paperscape/paperscape-data/master/pscp-2017.csv"
     )
@@ -58,9 +58,11 @@ def get_arxiv_docs() -> list[Article]:
 
     entries = [line.split(";", 7) for line in csv if not line.startswith("#")]
     df = pd.DataFrame(entries)
-    df_slice = df.sort_values(by=3, ascending=False)[:100][[0, 6]]
+    df_sorted = df.sort_values(by=3, ascending=False)[[0, 6]]
+    if max_num_articles:
+        df_sorted = df_sorted[:max_num_articles]
 
-    selected_articles = df_slice.apply(
+    selected_articles = df_sorted.apply(
         lambda row: Article(title=row[6], uri=f"https://arxiv.org/pdf/{row[0]}"), axis=1
     )
 
