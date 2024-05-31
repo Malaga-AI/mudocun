@@ -97,7 +97,9 @@ def generate_quiz(article: Article) -> Quiz:
     )
 
 
-def main(refresh: bool, arxiv_docs: bool, output_dir: str, failed_dir: str):
+def main(
+    refresh: bool, arxiv_docs: bool, output_dir: str, failed_dir: str, start_index: int
+):
     documents = (
         get_arxiv_docs() if arxiv_docs else [Article(**d) for d in online_documents]
     )
@@ -106,6 +108,9 @@ def main(refresh: bool, arxiv_docs: bool, output_dir: str, failed_dir: str):
     num_failed_articles = 0
 
     for idx, article in pending_articles:
+        if idx < start_index:
+            continue
+
         logging.debug(f"Processing article {idx}: {article.title}")
         filename = article.filename(idx)
         try:
@@ -145,6 +150,13 @@ if __name__ == "__main__":
     parser.add_argument("--arxiv-docs", action="store_true")
     parser.add_argument("--output-dir", type=str, default="./outputs")
     parser.add_argument("--failed-dir", type=str, default="./outputs/failed")
+    parser.add_argument("--start-index", type=int, default=0)
     args = parser.parse_args()
 
-    main(args.refresh, args.arxiv_docs, args.output_dir, args.failed_dir)
+    main(
+        args.refresh,
+        args.arxiv_docs,
+        args.output_dir,
+        args.failed_dir,
+        args.start_index,
+    )
