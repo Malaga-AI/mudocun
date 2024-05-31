@@ -11,7 +11,7 @@ class Article(BaseModel):
 
     def filename(self, index: int) -> str:
         title = re.sub(r"[:.\-,]", "", self.title)
-        return f"{str(index).zfill(4)}-{re.sub(r'[\/\\]+|\s+', '_', title)}"
+        return f"{str(index).zfill(4)}-{re.sub(r'[\/\\]+|\s+', '_', title)}"[:60]
 
 
 class MultipleChoiceQuestion(BaseModel):
