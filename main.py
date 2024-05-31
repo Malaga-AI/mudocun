@@ -63,7 +63,8 @@ def get_arxiv_docs(max_num_articles: int | None = None) -> list[Article]:
         df_sorted = df_sorted[:max_num_articles]
 
     selected_articles = df_sorted.apply(
-        lambda row: Article(title=row[6], uri=f"https://arxiv.org/pdf/{row[0]}"), axis=1
+        lambda row: Article(title=str(row[6]), uri=f"https://arxiv.org/pdf/{row[0]}"),
+        axis=1,
     )
 
     return selected_articles.tolist()
