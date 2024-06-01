@@ -118,6 +118,10 @@ def create_quiz(questions: list[MultipleChoiceQuestion]):
     Args:
         questions: list of multiple choice questions for the quiz.
     """
+    for q in questions:
+        # Validate whether model got object format right
+        MultipleChoiceQuestion.model_validate(q)
+
     return questions
 
 
@@ -199,7 +203,6 @@ def generate_structured_questions(
             func
         )  # Convert from Google Protocol Buffer to dict
         structured_questions = create_quiz(**func_dict["args"])
-        # TODO: check that format is according to model specs
     except Exception as e:
         raise FailedGeneration(
             message=e,
