@@ -1,0 +1,111 @@
+{
+  "article" : {
+    "title" : "Assessing the Stylistic Properties of Neurally Generated Text in Authorship Attribution",
+    "uri" : "https://arxiv.org/pdf/1708.05536"
+  },
+  "questions" : [
+    {
+      "multiple_choice_question" : {
+        "text" : "What information does Figure 1 convey about the Patrologia Latina (PL) corpus?",
+        "choices" : [
+          "It shows the average length of documents for all authors in the corpus.",
+          "It ranks the 18 most prolific authors in the corpus by document count and visualizes their average document length.",
+          "It compares the lexical diversity of the 18 most prolific authors in the corpus.",
+          "It highlights the authors in the corpus with the most stylistically distinct writing."
+        ],
+        "correct_answer_idx" : 1
+      },
+      "metadata" : {
+        "is_validated" : false,
+        "validator" : null,
+        "explanation" : null
+      }
+    },
+    {
+      "multiple_choice_question" : {
+        "text" : "What is the purpose of splitting the corpus into sets α and ω in Figure 2’s experimental setup?",
+        "choices" : [
+          "To compare the performance of different classifiers on the same dataset.",
+          "To train and test language models on two completely independent datasets.",
+          "To create a balanced experimental design for comparing the properties of generated and authentic text in authorship attribution.",
+          "To demonstrate the effect of data size on authorship attribution accuracy."
+        ],
+        "correct_answer_idx" : 2
+      },
+      "metadata" : {
+        "is_validated" : false,
+        "validator" : null,
+        "explanation" : null
+      }
+    },
+    {
+      "multiple_choice_question" : {
+        "text" : "What overall trend does Figure 3 illustrate regarding the F1 scores of authorship attribution?",
+        "choices" : [
+          "Classifiers trained on authentic data consistently outperform classifiers trained on generated data.",
+          "RNNLM-based generation always leads to lower authorship attribution scores compared to NGLM-based generation.",
+          "Augmenting training data with RNNLM-generated text generally improves authorship attribution accuracy, while NGLM-generated data shows mixed results.",
+          "There is no discernible difference in authorship attribution performance between models trained on authentic versus generated data."
+        ],
+        "correct_answer_idx" : 2
+      },
+      "metadata" : {
+        "is_validated" : false,
+        "validator" : null,
+        "explanation" : null
+      }
+    },
+    {
+      "multiple_choice_question" : {
+        "text" : "What key difference between NGLM and RNNLM-generated text does Figure 4 highlight?",
+        "choices" : [
+          "NGLM-generated text exhibits greater lexical diversity than RNNLM-generated text.",
+          "RNNLM-generated text clusters more closely with authentic text than NGLM-generated text.",
+          "NGLM-generated text more closely mirrors the ngram frequency distribution of authentic text compared to RNNLM-generated text.",
+          "Both NGLM and RNNLM-generated texts are clearly distinguishable from authentic text in terms of ngram frequency."
+        ],
+        "correct_answer_idx" : 2
+      },
+      "metadata" : {
+        "is_validated" : false,
+        "validator" : null,
+        "explanation" : null
+      }
+    },
+    {
+      "multiple_choice_question" : {
+        "text" : "What does Formula (5) represent in the context of RNN-based Language Modeling?",
+        "choices" : [
+          "The calculation of the hidden state activation within the recurrent layer of the network.",
+          "The probability distribution over the vocabulary for the next symbol in the sequence, conditioned on the preceding context.",
+          "The update rule for the learnable gates within a Long Short-Term Memory (LSTM) cell.",
+          "The calculation of the embedding vector for a given input symbol."
+        ],
+        "correct_answer_idx" : 1
+      },
+      "metadata" : {
+        "is_validated" : false,
+        "validator" : null,
+        "explanation" : null
+      }
+    }
+  ],
+  "metadata" : {
+    "creation_metadata" : {
+      "model" : "publishers/google/models/gemini-1.5-pro-001",
+      "region" : "europe-west9",
+      "num_input_tokens" : 2860,
+      "num_output_tokens" : 767,
+      "generation_time" : 19.223999977111816,
+      "timestamp" : "2024-06-01 02:24:23.867224+00:00"
+    },
+    "structuring_metadata" : {
+      "model" : "publishers/google/models/gemini-1.5-pro-001",
+      "region" : "europe-west9",
+      "num_input_tokens" : 876,
+      "num_output_tokens" : 485,
+      "generation_time" : 12.82592511177063,
+      "timestamp" : "2024-06-01 02:24:36.693860+00:00"
+    }
+  }
+}
