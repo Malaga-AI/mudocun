@@ -22,6 +22,10 @@ It can be used for:
 
 Reference articles have been contributed by community members (at `docs.py`) or extracted from the excellent [Paperscape data](https://github.com/paperscape/paperscape-data) repository by Damien P. George and Robert Knegjens, in particular from articles from their 2017 listing [here](https://github.com/paperscape/paperscape-data/blob/master/pscp-2017.csv).
 
+## Rationale
+
+This dataset is based on the observation of the excellent multimodal capabilities exhibited by Gemini 1.5 pro, when tested with scientific pdf documents. Head over to our notebook [here](./notebooks/feasibility_study.ipynb) for a more detailed motivation.
+
 ## Configure
 
 If you want to run request against Gemini, you'll need to set up your environment and GCP account first.
