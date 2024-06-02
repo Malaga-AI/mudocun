@@ -1,6 +1,6 @@
 # Mudocun: A synthetic dataset for multimodal understanding of scientific documents
 
-Mudocun is an evaluation dataset to check understanding of scientific documents. It currently contains  **4,800 multiple choice A-D questions extracted from 866 scientific articles**.
+Mudocun is a synthetic dataset to check understanding of scientific documents. It currently contains  **4,800 multiple choice A-D questions extracted from 866 scientific articles**, created by Google's Gemini 1.5 pro.
 
 All questions include answers and are stored in a structured format, for easier downstream processing.
 
